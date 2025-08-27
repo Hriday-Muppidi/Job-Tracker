@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  passwordHash   String
+  name           String?
+  contactInfo    String?
+  resumes        Attachment[]
+  applications   Application[]
+  resetTokens    PasswordResetToken[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Application {
+  id               String         @id @default(cuid())
+  user             User           @relation(fields: [userId], references: [id])
+  userId           String
+  title            String
+  company          String
+  description      String?
+  applicationUrl   String?
+  resume           Attachment?    @relation("ApplicationResume", fields: [resumeId], references: [id])
+  resumeId         String?        @unique
+  coverLetter      Attachment?    @relation("ApplicationCoverLetter", fields: [coverLetterId], references: [id])
+  coverLetterId    String?        @unique
+  dateApplied      DateTime?
+  status           ApplicationStatus @default(APPLIED)
+  statusUpdates    StatusUpdate[]
+  prepTasks        PrepTask[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model Attachment {
+  id          String      @id @default(cuid())
+  user        User        @relation(fields: [userId], references: [id])
+  userId      String
+  fileName    String
+  mimeType    String
+  storageKey  String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  // Backrelations for Application resume/coverLetter
+  applicationResume     Application? @relation("ApplicationResume")
+  applicationCoverLetter Application? @relation("ApplicationCoverLetter")
+}
+
+model StatusUpdate {
+  id             String       @id @default(cuid())
+  application    Application  @relation(fields: [applicationId], references: [id])
+  applicationId  String
+  status         ApplicationStatus
+  note           String?
+  followUpDate   DateTime?
+  createdAt      DateTime     @default(now())
+}
+
+model PrepTask {
+  id             String       @id @default(cuid())
+  application    Application  @relation(fields: [applicationId], references: [id])
+  applicationId  String
+  title          String
+  description    String?
+  dueDate        DateTime?
+  completed      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+enum ApplicationStatus {
+  APPLIED
+  PHONE_SCREEN
+  INTERVIEWING
+  OFFER
+  REJECTED
+  ON_HOLD
+}
+

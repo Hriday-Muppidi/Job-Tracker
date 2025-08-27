@@ -1,0 +1,15 @@
+node_modules
+.env
+.env.*
+dist
+build
+.turbo
+.cache
+.vite
+coverage
+*.log
+Dockerfile.prod
+**/.DS_Store
+**/Thumbs.db
+backend/prisma/dev.db
+uploads/
